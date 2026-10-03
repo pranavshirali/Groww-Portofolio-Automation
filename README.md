@@ -71,44 +71,22 @@ You will also need three external folders (defined in `config.py`):
 
 When moving this script to a new laptop, you **must** update `config.py`. Do not change paths inside the main script.
 
-```python
-# config.py
-import os
+I've given a copy of config (`config copy.py`). Rename it to `config.py` and then change the folder paths and copy & paste your credentials in the required fields.
 
-# --- 1. Folder Paths (MUST BE UPDATED FOR NEW LAPTOPS) ---
-WATCH_FOLDER = r"C:\Users\YOUR_USERNAME\Downloads"
-ARCHIVE_FOLDER = r"C:\Users\YOUR_USERNAME\Desktop\Groww\Archive"
-OUTPUT_FOLDER = r"C:\Users\YOUR_USERNAME\Desktop\Groww\Output"
-LOG_FILE = r"C:\Users\YOUR_USERNAME\Desktop\Groww\Scripts\automation.log"
-
-# --- 2. Email Credentials ---
-SENDER_EMAIL = "your_email@gmail.com"
-
-# Use this if running on a Personal Laptop (Standard SMTP)
-GMAIL_APP_PASSWORD = "<YOUR_16_DIGIT_APP_PASSWORD>" 
-
-# Use this if running on an Office Laptop (Corporate Firewall Bypass)
-BREVO_API_KEY = "<YOUR_BREVO_V3_API_KEY>"
-
-# --- 3. Recipients ---
-RECEIVER_EMAILS = ["dad_email@example.com"] 
-# RECEIVER_EMAILS can also be a list: ["email1@test.com", "email2@test.com"]
-```
 
 ## 7. Report Processing Logic
 
 * **Date Identification:** The script does *not* rely on the day you downloaded the file. It opens the Excel file and searches for the text `HOLDINGS AS ON [Date]`. This ensures that if you download a historical report from 3 months ago, it accurately processes and labels it with the old date.
 * **Data Transformation:** It renames raw columns (e.g., "Invested Value" to "Invested_Value") to make math easier. It calculates "Returns" and "Percentage" for every row.
 * **Fund Segregation:** The script looks at a hardcoded list of funds (e.g., *Quant Flexi Cap*). Any row matching those names is moved into an "Equity" data bucket, while the rest remain in the "Liquid" data bucket.
-* **External Balances:** Static values for a Credit Card Deposit (18,000) and House Deposit (40,000) are added to the Liquid Funds total to calculate the Grand Total Net Worth.
 
 ## 8. Excel Report Structure
 
 The final generated Excel file contains three highly formatted tabs:
 
-1. **Consolidated Folio:** A master overview. Includes a "Category Allocation" table showing what percentage of the portfolio is Liquid vs. Equity. It lists *all* funds together to show combined Profit/Loss.
-2. **Liquid Funds:** Tracks the main mutual funds. This is the only sheet that includes the final "Grand Total" Net Worth (including external deposits).
-3. **Equity Funds:** A completely isolated view of specific, independently tracked equity funds.
+* **Consolidated Folio:** A master overview. Includes a "Category Allocation" table showing what percentage of the portfolio is Liquid vs. Equity. It lists *all* funds together to show combined Profit/Loss.
+* **Liquid Funds:** Tracks the liquid funds. This is the only sheet that includes the final "Grand Total" Net Worth.
+* **Equity Funds:** A completely isolated view of specific, independently tracked equity funds. 
 
 **Formatting Rules Applied Automatically:**
 * Long fund names will dynamically widen the column so text is never cut off.
@@ -205,3 +183,15 @@ When deploying to a new laptop, follow these steps to validate:
 * **Log Location:** Look for `automation.log` in your Scripts folder.
 * **Email Methods:** Personal Laptop = Gmail SMTP. Office Laptop = Brevo API.
 * **Core Logic:** Detect `.xlsx` -> Extract Date -> Split Funds -> Build 3 Sheets -> Send Email.
+
+
+**NOTE:** This project was originally developed for personal use, so you may find some example equity funds, liquid funds, stocks, and a personal Excel report format included in the repository.
+
+You can customize the project by editing `Scripts.py` to add or modify your own funds and stocks. Feel free to explore and modify `Scripts.py` to understand how the automation works and adapt it to your requirements.
+
+The mailing logic remains the same, so you can leave it untouched if you don’t need any changes. However, you can also customize the mailing logic according to your requirements.
+
+
+**PLEASE DO SUPPORT THE WORK BY FORKING THE REPO AND STARING IT ON GITHUB !**
+
+**THANK YOU !**
