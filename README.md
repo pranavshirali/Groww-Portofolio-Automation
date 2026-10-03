@@ -140,6 +140,11 @@ Because corporate networks have strict firewalls, the codebase supports two dist
   4. Paste this key into `config.py` under `BREVO_API_KEY`.
   5. The `email_service.py` module must be swapped to the `requests.post` version of the code that points to `https://api.brevo.com/v3/smtp/email`.
 
+To use the Brevo mailing service, comment out the imported `gmail_mailing_script` package. To use the Gmail mailing service, comment out the imported `brevo_mailing_script` package.
+
+These imports are located on lines 15 and 16 of the script.
+
+
 ## 11. Logging
 
 * All console output, `print()` statements, and hidden error tracebacks are safely caught and written to `automation.log` inside your Scripts folder.
@@ -169,6 +174,7 @@ When deploying to a new laptop, follow these steps to validate:
 ## 14. Troubleshooting Guide
 
 | **Symptom** | **Likely Cause** | **Diagnosis & Fix** | 
+|---|---|---|
 | **Command Prompt says "python is not recognized"** | Python isn't in your System PATH. | Reinstall Python and ensure "Add Python to PATH" is checked at the bottom of the installer. | 
 | **Terminal throws `ModuleNotFoundError`** | Missing packages. | Run `pip install pandas watchdog openpyxl xlsxwriter requests` in your terminal. | 
 | **I downloaded the file, but absolutely nothing happened.** | Folder path mismatch or Watchdog isn't running. | Check `config.py` to ensure `WATCH_FOLDER` points to your exact Downloads folder. Ensure the background script is actually running via Task Manager. | 
