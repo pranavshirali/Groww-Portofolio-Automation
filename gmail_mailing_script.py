@@ -20,15 +20,25 @@ def send_report_email(file_path, report_date):
         msg['To'] = ", ".join(config.RECEIVER_EMAILS)
     else:
         msg['To'] = config.RECEIVER_EMAILS
+    
+    if isinstance(config.CC_EMAILS, list):
+        msg['Cc'] = ", ".join(config.CC_EMAILS)
+    else:
+        msg['Cc'] = config.CC_EMAILS
+    
+    if isinstance(config.BCC_EMAILS, list):
+        msg['Bcc'] = ", ".join(config.BCC_EMAILS)
+    else:
+        msg['Bcc'] = config.BCC_EMAILS
 
     html_content = f"""
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
         <p>Hi,</p>
         <p>Please find attached the updated <strong>Mutual Fund Balance Sheet & Net Worth Summary</strong> for the period ending <strong>{report_date}</strong>.</p>
-        <p>Best regards,<br><strong>Pranav</strong></p>
+        <p>Best regards,<br><strong>Pranav Shirali</strong></p>
         <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px;">
         <p style="font-size: 12px; color: #888;">
-            <em>Note: This email and the attached report were generated automatically by the background portfolio tracker.</em>
+            <em>Note: This email and the attached report were generated automatically by a personal automation.</em>
         </p>
     </div>
     """

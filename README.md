@@ -1,4 +1,4 @@
-# <selection-tag>Groww Portfolio Automation - Knowledge Transfer & Documentation Guide</selection-tag>
+# <selection-tag>Groww Portfolio Automation - Readme</selection-tag>
 
 ## 1. Introduction and Purpose
 
@@ -58,7 +58,7 @@ Ensure your files are organized securely in a dedicated project folder (e.g., `C
 
 * **`config.py`**: The central brain for settings. Holds all folder paths, email addresses, and passwords/API keys.
 * **`Scripts.py`**: The main engine. Contains the Watchdog monitor, the Pandas data transformation logic, and the Excel drawing logic.
-* **`email_service.py`**: The dedicated module that constructs the HTML email and transmits it.
+* **`gmail_mailing_script.py` & `brevo_mailing_script.py`**: The dedicated modules that construct the HTML email and transmit it. The script dynamically imports the correct one based on your configuration.
 * **`Trigger.bat`**: A Windows batch file used to easily start the script invisibly in the background.
 * **`automation.log`**: A text file (auto-generated) that records exactly what the script is doing in real-time.
 
@@ -102,7 +102,7 @@ The final generated Excel file contains three highly formatted tabs:
 
 ## 10. Email Automation (Personal vs. Office Setup)
 
-Because corporate networks have strict firewalls, the codebase supports two distinct ways to send the email depending on which environment you are running it in. You must configure `email_service.py` to use the appropriate method.
+Because corporate networks have strict firewalls, the codebase supports two distinct ways to send the email depending on which environment you are running it in. You must configure `config.py` to use the appropriate method.
 
 ### Method A: Gmail SMTP (For Personal Laptops)
 * **How it works:** Logs into Gmail using `smtplib` on Port 465 (SSL). 
@@ -116,16 +116,12 @@ Because corporate networks have strict firewalls, the codebase supports two dist
   2. Verify your sender email address in their dashboard.
   3. Navigate to **SMTP & API** -> **API Keys** and generate a new `v3 API Key`.
   4. Paste this key into `config.py` under `BREVO_API_KEY`.
-  5. The `email_service.py` module must be swapped to the `requests.post` version of the code that points to `https://api.brevo.com/v3/smtp/email`.
-
-To use the Brevo mailing service, comment out the imported `gmail_mailing_script` package. To use the Gmail mailing service, comment out the imported `brevo_mailing_script` package.
-
-These imports are located on lines 15 and 16 of the script.
+  5. To use the Brevo mailing service, change the `ACTIVE_EMAIL_PROVIDER` parameter to "BREVO" in the `config.py` file. To use Gmail, set it to "GMAIL".
 
 
 ## 11. Logging
 
-* All console output, `print()` statements, and hidden error tracebacks are safely caught and written to `automation.log` inside your Scripts folder.
+* All console output, `print()` statements, and hidden error tracebacks are safely caught and written to the configured `automation.log` file.
 * **Log Rotation:** The script uses a `RotatingFileHandler`. If the log file reaches 5 Megabytes, it backs it up and starts a fresh one. It keeps a maximum of 3 backups. This guarantees the automation will never slowly fill up your computer's hard drive over the years.
 * **Troubleshooting:** If the script "isn't doing anything," open `automation.log`. Scroll to the very bottom to see the exact error message.
 
@@ -156,16 +152,16 @@ When deploying to a new laptop, follow these steps to validate:
 | **Command Prompt says "python is not recognized"** | Python isn't in your System PATH. | Reinstall Python and ensure "Add Python to PATH" is checked at the bottom of the installer. | 
 | **Terminal throws `ModuleNotFoundError`** | Missing packages. | Run `pip install pandas watchdog openpyxl xlsxwriter requests` in your terminal. | 
 | **I downloaded the file, but absolutely nothing happened.** | Folder path mismatch or Watchdog isn't running. | Check `config.py` to ensure `WATCH_FOLDER` points to your exact Downloads folder. Ensure the background script is actually running via Task Manager. | 
-| **File processes, but email fails to send (SMTP Timeout)** | Corporate Firewall blocking Port 465. | Switch `brevo_mailing_script.py` to use the Brevo API integration instead of standard SMTP. Read Section-10. | 
+| **File processes, but email fails to send (SMTP Timeout)** | Corporate Firewall blocking Port 465. | Change `ACTIVE_EMAIL_PROVIDER` to "BREVO" in `config.py` to use the Brevo API integration instead of standard SMTP. Read Section-10. | 
 | **Brevo Error: "Your Brevo account has been suspended"** | Automated Anti-Spam Bot flag. | New free Brevo accounts sending `.xlsx` attachments to Gmail are often flagged as spam bots. Reply directly to the suspension email stating this is a personal Python script sending a financial report to family. They will manually lift the suspension. |
 | **Log file is not updating.** | Logging redirect is broken. | Ensure `sys.stdout = StreamToLogger...` is NOT commented out in `Scripts.py`. | 
 | **Error: "Could not find HOLDINGS AS ON"** | Groww changed their export format. | Open the raw Excel file. Did Groww change the header text? You may need to update the regex search string in `Scripts.py`. | 
 
 ## 15. Maintenance and Future Changes
 
-* **Changing Laptops:** When migrating from a personal laptop to an office laptop, be prepared to swap `email_service.py` to the API version to bypass the corporate firewall.
-* **Adding new Equity Funds:** Open `Scripts.py`. Locate the list named `SEPARATED_FUNDS`. Simply add the exact name of the new fund to this list (in quotes, separated by commas). The script will automatically route it to the Equity sheet next month.
-* **Updating external deposits:** In `Scripts.py`, locate `deposit_cc = 18000` and `house_deposit = 40000`. Update these numbers as your real-world balances change.
+* **Changing Laptops:** When migrating from a personal laptop to an office laptop, be prepared to change `ACTIVE_EMAIL_PROVIDER` to "BREVO" in `config.py` to bypass the corporate firewall.
+* **Adding new Equity Funds:** Open `config.py`. Locate the list named `SEPARATED_FUNDS`. Simply add the exact name of the new fund to this list (in quotes, separated by commas). The script will automatically route it to the Equity sheet next month.
+* **Updating external deposits:** In `config.py`, locate `DEPOSIT_CC = 18000` and `HOUSE_DEPOSIT = 40000`. Update these numbers as your real-world balances change.
 * **DO NOT TOUCH:** Do not casually edit the `wait_for_file_unlock` function or the `watchdog` event classes. Modifying these can reintroduce the duplicate-processing bugs associated with browser downloads.
 
 ## 16. Security and Best Practices
@@ -180,11 +176,10 @@ When deploying to a new laptop, follow these steps to validate:
 * **Start Command (Background):** Double click `Trigger.bat`
 * **Stop Command:** `taskkill /F /IM pythonw.exe`
 * **Config File:** `config.py` (Update paths and emails here)
-* **Log Location:** Look for `automation.log` in your Scripts folder.
+* **Log Location:** Look for `automation.log` in the path configured in `config.py`.
 * **Email Methods:** Personal Laptop = Gmail SMTP. Office Laptop = Brevo API.
 * **Core Logic:** Detect `.xlsx` -> Extract Date -> Split Funds -> Build 3 Sheets -> Send Email.
-
-
+## 
 **NOTE:** This project was originally developed for personal use, so you may find some example equity funds, liquid funds, stocks, and a personal Excel report format included in the repository.
 
 You can customize the project by editing `Scripts.py` to add or modify your own funds and stocks. Feel free to explore and modify `Scripts.py` to understand how the automation works and adapt it to your requirements.

@@ -34,17 +34,17 @@ def send_report_email(file_path, report_date):
     }
     
     payload = {
-        "sender": {"email": config.SENDER_EMAIL, "name": "Groww Automation"},
+        "sender": {"email": config.SENDER_EMAIL, "name": "pranavshirali.work"},
         "to": [{"email": email} for email in config.RECEIVER_EMAILS],
         "subject": f"Monthly Mutual Fund Balance Sheet - {report_date}",
         "htmlContent": f"""
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
             <p>Hi,</p>
             <p>Please find attached the updated <strong>Mutual Fund Balance Sheet & Net Worth Summary</strong> for the period ending <strong>{report_date}</strong>.</p>
-            <p>Best regards,<br><strong>Pranav</strong></p>
+            <p>Best regards,<br><strong>Pranav Shirali</strong></p>
             <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px;">
             <p style="font-size: 12px; color: #888;">
-                <em>Note: This email and the attached report were generated automatically by the background portfolio tracker.</em>
+                <em>Note: This email and the attached report were generated automatically by a personal automation.</em>
             </p>
         </div>
         """,

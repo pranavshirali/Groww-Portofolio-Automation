@@ -12,9 +12,18 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 import config
-from email_service import send_report_email
 
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
+
+
+# --- DYNAMIC EMAIL ROUTING ---
+if config.ACTIVE_EMAIL_PROVIDER == 'GMAIL':
+    from gmail_mailing_script import send_report_email 
+elif config.ACTIVE_EMAIL_PROVIDER == 'BREVO':
+    from brevo_mailing_script import send_report_email
+else:
+    raise ValueError("[ERROR] Invalid ACTIVE_EMAIL_PROVIDER in config.py. Must be 'GMAIL' or 'BREVO'.")
+
 
 # ==========================================
 # 1. ARCHITECTURE & LOGGING
@@ -278,15 +287,9 @@ def process_report(filepath):
         df['Returns'] = df['Current_Value'] - df['Invested_Value']
         df['Percentage'] = (df['Returns'] / df['Invested_Value']) * 100
         
-        SEPARATED_FUNDS = [
-            "SBI Nifty Next 50 Index Fund Direct Growth",
-            "Quant Flexi Cap Fund Direct Growth",
-            "WhiteOak Capital Mid Cap Fund Direct Growth"
-        ]
-        
         # Partition data streams
-        main_df = df[~df['Scheme'].isin(SEPARATED_FUNDS)]
-        other_df = df[df['Scheme'].isin(SEPARATED_FUNDS)]
+        main_df = df[~df['Scheme'].isin(config.SEPARATED_FUNDS)]
+        other_df = df[df['Scheme'].isin(config.SEPARATED_FUNDS)]
         
         def get_metrics(data_df):
             p_df = data_df[data_df['Returns'] >= 0].sort_values(by='Percentage', ascending=False)
@@ -307,19 +310,17 @@ def process_report(filepath):
             ("Equity Funds", o_cur, (o_cur / c_cur) if c_cur > 0 else 0)
         ]
         
-        deposit_cc = 18000
-        house_deposit = 40000
-        grand_total = m_cur + deposit_cc + house_deposit
+        grand_total = m_cur + config.DEPOSIT_CC + config.HOUSE_DEPOSIT
         
         generate_excel_report(
-            m_p, m_l, m_inv, m_cur, m_ret, m_pct, grand_total, deposit_cc, house_deposit,
+            m_p, m_l, m_inv, m_cur, m_ret, m_pct, grand_total, config.DEPOSIT_CC, config.HOUSE_DEPOSIT,
             o_p, o_l, o_inv, o_cur, o_ret, o_pct,
             c_p, c_l, c_inv, c_cur, c_ret, c_pct, alloc_data,
             report_date
         )
         
         output_filename = os.path.join(config.OUTPUT_FOLDER, f"Balancesheet_{report_date.strftime('%Y-%m-%d')}.xlsx")
-        #send_report_email(output_filename, report_date)
+        send_report_email(output_filename, report_date)
         
     except Exception as e:
         print(f"Transformation Failed: {e}")
