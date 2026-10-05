@@ -2,3 +2,7 @@ config.py
 __pycache__/
 *.pyc
 .gitignore
+automation.log
+automation_log.txt
+Trigger.bat
+Test/
