@@ -1,9 +1,0 @@
-config.py
-__pycache__/
-*.pyc
-automation.log
-automation_log.txt
-Trigger.bat
-Test/
-test_Scripts.py
-test_Scripts.py
