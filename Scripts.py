@@ -7,6 +7,7 @@ import warnings
 import logging
 import pandas as pd
 import config
+import pdf_service
 
 from logging.handlers import RotatingFileHandler
 from watchdog.observers import Observer
@@ -61,13 +62,15 @@ sys.stderr = StreamToLogger(logger, logging.ERROR)
 # ==========================================
 def generate_excel_report(m_p, m_l, m_inv, m_cur, m_ret, m_pct, g_total, dep_cc, h_deposit, 
                           o_p, o_l, o_inv, o_cur, o_ret, o_pct, 
-                          c_p, c_l, c_inv, c_cur, c_ret, c_pct, alloc_data, report_date):
+                          c_p, c_l, c_inv, c_cur, c_ret, c_pct, alloc_data, report_date, report_folder):
     
     print(f"Generating enhanced multi-sheet Excel report for {report_date}...")
     
     date_str_iso = report_date.strftime("%Y-%m-%d")
     date_str_eu = report_date.strftime("%d.%m.%Y")
-    output_filename = os.path.join(config.OUTPUT_FOLDER, f"Balancesheet_{date_str_iso}.xlsx")
+    
+    # Save directly into the date-stamped folder
+    output_filename = os.path.join(report_folder, f"Balancesheet_{date_str_iso}.xlsx")
     
     with pd.ExcelWriter(output_filename, engine='xlsxwriter') as writer:
         workbook = writer.book
@@ -112,6 +115,11 @@ def generate_excel_report(m_p, m_l, m_inv, m_cur, m_ret, m_pct, g_total, dep_cc,
             worksheet.set_column('B:B', max(35, max_name_len + 3)) # Dynamic width
             worksheet.set_column('C:G', 20) # Made wider for the extra Weight column
             
+            # --- NEW: PDF / PRINT LAYOUT LOCK ---
+            worksheet.set_landscape()
+            worksheet.fit_to_pages(1, 0) # 1 page wide, infinite pages tall
+            worksheet.set_margins(left=0.4, right=0.4, top=0.5, bottom=0.5)
+
             row_idx = 0
             
             # 1. HOLDING SUMMARY
@@ -313,15 +321,38 @@ def process_report(filepath):
         
         grand_total = m_cur + config.DEPOSIT_CC + config.HOUSE_DEPOSIT  
         
+        # --- NEW: FOLDER STRUCTURE LOGIC ---
+        date_str_iso = report_date.strftime('%Y-%m-%d')
+        report_folder = os.path.join(config.REPORTS_BASE_FOLDER, date_str_iso)
+        os.makedirs(report_folder, exist_ok=True)
+        
+        # Generate the Excel File inside the new folder
         generate_excel_report(
             m_p, m_l, m_inv, m_cur, m_ret, m_pct, grand_total, config.DEPOSIT_CC, config.HOUSE_DEPOSIT,
             o_p, o_l, o_inv, o_cur, o_ret, o_pct,
             c_p, c_l, c_inv, c_cur, c_ret, c_pct, alloc_data,
-            report_date
+            report_date, report_folder
         )
         
-        output_filename = os.path.join(config.OUTPUT_FOLDER, f"Balancesheet_{report_date.strftime('%Y-%m-%d')}.xlsx")
-        send_report_email(output_filename, report_date)
+        excel_filename = os.path.join(report_folder, f"Balancesheet_{date_str_iso}.xlsx")
+        pdf_filename = os.path.join(report_folder, f"Balancesheet_{date_str_iso}.pdf")
+
+        # Generate PDF
+        pdf_service.generate_pdf(excel_filename, pdf_filename)
+
+        # Move the downloaded file itself (with its original name) into the date folder
+        original_filename = os.path.basename(filepath)
+        final_raw_path = os.path.join(report_folder, original_filename)
+        
+        try:
+            # shutil.move physically moves the file, ensuring no copy is left in Downloads
+            shutil.move(filepath, final_raw_path)
+            print(f"[CLEANUP] Successfully moved original download to: {final_raw_path}")
+        except Exception as e:
+            print(f"[ERROR] Could not move original file to {final_raw_path}: {e}")
+
+        # --- EMAIL TRIGGER ENABLED ---
+        send_report_email(excel_filename, pdf_filename, report_date)
         
     except Exception as e:
         print(f"Transformation Failed: {e}")
@@ -369,14 +400,6 @@ class GrowwReportHandler(FileSystemEventHandler):
                 return 
             
             process_report(filepath)
-            
-            archive_path = os.path.join(config.ARCHIVE_FOLDER, filename)
-            if os.path.exists(filepath):
-                try:
-                    shutil.move(filepath, archive_path)
-                    print(f"[CLEANUP] Moved {filename} to Archive folder.")
-                except Exception as e:
-                    print(f"[ERROR] Could not move {filename}: {e}")
 
 if __name__ == "__main__":
     event_handler = GrowwReportHandler()

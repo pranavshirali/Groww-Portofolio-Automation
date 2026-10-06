@@ -3,8 +3,7 @@ import os
 
 # --- Folder Paths ---
 WATCH_FOLDER = r"<WATCH_FOLDER_PATH>"
-ARCHIVE_FOLDER = r"<ARCHIVE_FOLDER_PATH>"
-OUTPUT_FOLDER = r"<OUTPUT_FOLDER_PATH>"
+REPORTS_BASE_FOLDER = r"<REPORT_FOLDER_PATH>"
 LOG_FILE = r"<LOG_FILE_PATH>"
 
 # --- Email Credentials & Settings ---
