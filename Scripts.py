@@ -322,8 +322,13 @@ def process_report(filepath):
         grand_total = m_cur + config.DEPOSIT_CC + config.HOUSE_DEPOSIT  
         
         # --- NEW: FOLDER STRUCTURE LOGIC ---
+        # --- HIERARCHICAL FOLDER STRUCTURE LOGIC ---
         date_str_iso = report_date.strftime('%Y-%m-%d')
-        report_folder = os.path.join(config.REPORTS_BASE_FOLDER, date_str_iso)
+        year_str = report_date.strftime('%Y')
+        month_str = report_date.strftime('%m - %b')  # %b gives 'Jan', 'Feb', etc.
+        
+        # This dynamically builds: Reports / 2026 / Oct / Reports...
+        report_folder = os.path.join(config.REPORTS_BASE_FOLDER, year_str, month_str)
         os.makedirs(report_folder, exist_ok=True)
         
         # Generate the Excel File inside the new folder
